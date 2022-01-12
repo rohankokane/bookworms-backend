@@ -1,0 +1,8 @@
+{
+  "env": {
+    "DB_USER": "rock_dev",
+    "DB_NAME": "bookworms",
+    "DB_PASSWORD": "0U6IjmqTvSUG6UEY",
+    "JWT_KEY": "secret_key"
+  }
+}
