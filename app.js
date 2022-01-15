@@ -1,48 +1,60 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const mongoose = require("mongoose");
+const path = require('path')
 
-const usersRoutes = require("./routes/users-routes");
-const HttpError = require("./models/http-error");
+const express = require('express')
+const bodyParser = require('body-parser')
+const mongoose = require('mongoose')
 
-const app = express();
+const postsRoutes = require('./routes/posts-routes')
+const placesRoutes = require('./routes/places-routes')
+const usersRoutes = require('./routes/users-routes')
+const HttpError = require('./models/http-error')
 
-app.use(bodyParser.json());
+const app = express()
+
+app.use(bodyParser.json())
+
+// app.use('/uploads/images', express.static(path.join('uploads', 'images')));
 
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-  );
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE");
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+  )
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE')
 
-  next();
-});
+  next()
+})
 
-app.use("/api/users", usersRoutes);
+app.use('/api/places', placesRoutes)
+app.use('/api/users', usersRoutes)
+app.use('/api/posts', postsRoutes)
 
 app.use((req, res, next) => {
-  const error = new HttpError("Could not find this route.", 404);
-  throw error;
-});
+  const error = new HttpError('Could not find this route.', 404)
+  throw error
+})
 
 app.use((error, req, res, next) => {
-  // delete imgs if present
+  // if (req.file) {
+  //   fs.unlink(req.file.path, err => {
+  //     console.log(err);
+  //   });
+  // }
   if (res.headerSent) {
-    return next(error);
+    return next(error)
   }
-  res.status(error.code || 500);
-  res.json({ message: error.message || "An unknown error occurred!" });
-});
+  res.status(error.code || 500)
+  res.json({ message: error.message || 'An unknown error occurred!' })
+})
 
 mongoose
   .connect(
-    `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.wtuap.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`
+    `mongodb+srv://academind:ORlnOPLKvIH9M9hP@cluster0-ntrwp.mongodb.net/mern?retryWrites=true&w=majority`
   )
   .then(() => {
-    app.listen(5000);
+    app.listen(5000)
   })
-  .catch(err => {
-    console.log(err);
-  });
+  .catch((err) => {
+    console.log(err)
+  })
