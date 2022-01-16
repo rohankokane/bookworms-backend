@@ -5,6 +5,33 @@ const HttpError = require('../models/http-error')
 const Post = require('../models/post')
 const User = require('../models/user')
 
+const getAllPosts = async (req, res, next) => {
+  let posts
+  try {
+    posts = await Post.find({})
+      .sort({ createdAt: -1 })
+      .populate('creator', '-password')
+    // console.log(posts)
+    // posts.username = posts.user.username
+  } catch (err) {
+    const error = new HttpError(
+      'Fetching Posts failed, please try again later.',
+      500
+    )
+    return next(error)
+  }
+
+  // if (!Posts || Posts.length === 0) {
+  if (!posts || posts.length === 0) {
+    return next(
+      new HttpError('Could not find Posts for the provided user id.', 404)
+    )
+  }
+  res.json({
+    posts: posts.map((post) => post.toObject({ getters: true })),
+  })
+}
+
 const getPostsByUserId = async (req, res, next) => {
   //get posts by user id
   const userId = req.params.uid
@@ -65,7 +92,6 @@ const createPost = async (req, res, next) => {
 
   const createdPost = new Post({
     caption,
-    // location: coordinates,
     // image: req.file.path,
     creator: req.userData.userId,
   })
@@ -83,8 +109,6 @@ const createPost = async (req, res, next) => {
     return next(error)
   }
 
-  console.log(user)
-
   try {
     const sess = await mongoose.startSession()
     sess.startTransaction()
@@ -93,11 +117,16 @@ const createPost = async (req, res, next) => {
     await user.save({ session: sess })
     await sess.commitTransaction()
   } catch (err) {
-    const error = new HttpError('Creating post failed, please try again.', 500)
+    const error = new HttpError(
+      `Creating post failed, please try again. ${err} `,
+      500
+    )
     return next(error)
   }
-
-  res.status(201).json({ post: createdPost })
+  // delete user.password
+  createdPost.creator = user
+  console.log(createdPost, user._id)
+  res.status(201).json({ post: createdPost.toObject({ getters: true }) })
 }
 
 const updatePost = async (req, res, next) => {
@@ -114,7 +143,7 @@ const updatePost = async (req, res, next) => {
 
   let post
   try {
-    post = await Post.findById(postId)
+    post = await Post.findById(postId).populate('creator', '-password')
   } catch (err) {
     const error = new HttpError(
       'Something went wrong, could not update post.',
@@ -123,12 +152,13 @@ const updatePost = async (req, res, next) => {
     return next(error)
   }
 
-  if (post.creator.toString() !== req.userData.userId) {
+  if (post.creator.id.toString() !== req.userData.userId) {
     const error = new HttpError('You are not allowed to edit this post.', 401)
     return next(error)
   }
 
   post.caption = caption
+  // update likes , bookmarks, caption
 
   try {
     await post.save()
@@ -142,6 +172,67 @@ const updatePost = async (req, res, next) => {
 
   res.status(200).json({ post: post.toObject({ getters: true }) })
 }
+
+const likePost = async (req, res, next) => {
+  const userId = req.userData.userId
+  const postId = req.params.pid
+  try {
+    await Post.updateOne({ _id: postId }, { $push: { likes: userId } })
+  } catch (err) {
+    const error = new HttpError(
+      `Something went wrong, could not like the post. ${err}`,
+      500
+    )
+    return next(error)
+  }
+  res.status(200).json({ message: 'liked the post' })
+}
+
+const unlikePost = async (req, res, next) => {
+  const userId = req.userData.userId
+  const postId = req.params.pid
+  try {
+    await Post.updateOne({ _id: postId }, { $pull: { likes: userId } })
+  } catch (err) {
+    const error = new HttpError(
+      `Something went wrong, could not unlike the post. ${err}`,
+      500
+    )
+    return next(error)
+  }
+  res.status(200).json({ message: 'unliked the post' })
+}
+
+const bookmarkPost = async (req, res, next) => {
+  const userId = req.userData.userId
+  const postId = req.params.pid
+  try {
+    await Post.updateOne({ _id: postId }, { $push: { bookmarks: userId } })
+  } catch (err) {
+    const error = new HttpError(
+      `Something went wrong, could not bookmark the post. ${err}`,
+      500
+    )
+    return next(error)
+  }
+  res.status(200).json({ message: 'bookmarked the post' })
+}
+
+const unbookmarkPost = async (req, res, next) => {
+  const userId = req.userData.userId
+  const postId = req.params.pid
+  try {
+    await Post.updateOne({ _id: postId }, { $pull: { bookmarks: userId } })
+  } catch (err) {
+    const error = new HttpError(
+      `Something went wrong, could not unbookmark the post. ${err}`,
+      500
+    )
+    return next(error)
+  }
+  res.status(200).json({ message: 'unbookmarked the post' })
+}
+
 const deletePost = async (req, res, next) => {
   const postId = req.params.pid
 
@@ -190,8 +281,13 @@ const deletePost = async (req, res, next) => {
   res.status(200).json({ message: 'Deleted post.' })
 }
 
+exports.getAllPosts = getAllPosts
 exports.getPostsByUserId = getPostsByUserId
 exports.getPostById = getPostById
 exports.createPost = createPost
 exports.updatePost = updatePost
 exports.deletePost = deletePost
+exports.likePost = likePost
+exports.unlikePost = unlikePost
+exports.bookmarkPost = bookmarkPost
+exports.unbookmarkPost = unbookmarkPost

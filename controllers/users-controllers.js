@@ -162,17 +162,36 @@ const login = async (req, res, next) => {
   })
 }
 
-const getUserById = async (req, res) => {
+// const bootstrapData = async (req, res, next) => {
+//   const _id = req.userData.userId
+//   req.params.id = _id
+//   try {
+//     const userData = await getUserById()
+//   } catch (e) {
+//     const error = new HttpError(
+//       'Something went wrong, could not get the user',
+//       500
+//     )
+//     return next(error)
+//   }
+// }
+
+const getUserById = async (req, res, next) => {
   const _id = req.params.id
 
   try {
-    const user = await User.findById(_id)
+    const user = await User.findById(_id, '-password')
     if (!user) {
-      return res.status(404).send()
+      const error = new HttpError('No user found', 404)
+      return next(error)
     }
-    res.send(user)
+    res.status(200).json({ user: user.toObject({ getters: true }) })
   } catch (e) {
-    res.status(500).send()
+    const error = new HttpError(
+      'Something went wrong, could not get the user',
+      500
+    )
+    return next(error)
   }
 }
 

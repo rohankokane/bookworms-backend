@@ -8,12 +8,11 @@ const router = express.Router()
 
 router.use(checkAuth)
 
+router.get('/', postsControllers.getAllPosts)
 //posts/user/:userId GET getAllPostsByUSERID
 router.get('/user/:uid', postsControllers.getPostsByUserId)
-
 //posts/:pid GET getPostById
 router.get('/:pid', postsControllers.getPostById)
-
 //POST create post
 router.post(
   '/',
@@ -26,6 +25,10 @@ router.patch(
   [check('caption').not().isEmpty()],
   postsControllers.updatePost
 )
+router.get('/like/:pid', postsControllers.likePost)
+router.get('/unlike/:pid', postsControllers.unlikePost)
+router.get('/bookmark/:pid', postsControllers.bookmarkPost)
+router.get('/unbookmark/:pid', postsControllers.unbookmarkPost)
 // posts/:pid DELETE
 router.delete('/:pid', postsControllers.deletePost)
 
