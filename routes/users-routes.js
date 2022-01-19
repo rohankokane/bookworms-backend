@@ -23,6 +23,17 @@ router.use(checkAuth)
 router.get('/', usersController.getUsers)
 // router.get('/bootstrap', usersController.bootstrapData)
 router.get('/:id', usersController.getUserById)
-router.patch('/:id', usersController.updateUser)
+router.get('/new/suggestion', usersController.getNewUsers)
+router.patch(
+  '/:id',
+  [
+    check('fullname').not().isEmpty(),
+    check('username').not().isEmpty(),
+    check('bio').isLength({ min: 1 }),
+  ],
+  usersController.updateUser
+)
+router.get('/follow/:pid', usersController.followProfile)
+router.get('/unfollow/:pid', usersController.unfollowProfile)
 
 module.exports = router

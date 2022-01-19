@@ -36,9 +36,13 @@ const getPostsByUserId = async (req, res, next) => {
   //get posts by user id
   const userId = req.params.uid
 
-  let userWithPosts
+  // let posts
+  let posts
   try {
-    userWithPosts = await User.findById(userId).populate('Posts')
+    posts = await Post.find({ creator: userId })
+      .populate('creator', '-password')
+      .sort({ createdAt: -1 })
+    // userWithPosts = await User.findById(userId).populate('posts')
   } catch (err) {
     const error = new HttpError(
       'Fetching Posts failed, please try again later.',
@@ -46,15 +50,16 @@ const getPostsByUserId = async (req, res, next) => {
     )
     return next(error)
   }
-
+  // console.log(posts)
   // if (!Posts || Posts.length === 0) {
-  if (!userWithPosts || userWithPosts.Posts.length === 0) {
-    return next(
-      new HttpError('Could not find Posts for the provided user id.', 404)
-    )
+  if (posts.length === 0) {
+    res.json({ posts: [], message: 'no posts found' })
+    // return next(
+    //   new HttpError('Could not find Posts for the provided user id.', 404)
+    // )
   }
   res.json({
-    posts: userWithPosts.posts.map((post) => post.toObject({ getters: true })),
+    posts: posts.map((post) => post.toObject({ getters: true })),
   })
 }
 
@@ -63,7 +68,7 @@ const getPostById = async (req, res, next) => {
 
   let post
   try {
-    post = await Post.findById(postId)
+    post = await Post.findById(postId).populate('creator', '-password')
   } catch (err) {
     const error = new HttpError(
       'Something went wrong, could not find a post.',
@@ -125,7 +130,7 @@ const createPost = async (req, res, next) => {
   }
   // delete user.password
   createdPost.creator = user
-  console.log(createdPost, user._id)
+  // console.log(createdPost, user._id)
   res.status(201).json({ post: createdPost.toObject({ getters: true }) })
 }
 

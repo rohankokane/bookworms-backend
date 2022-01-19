@@ -13,12 +13,13 @@ const userSchema = new Schema({
   followers: [
     {
       type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
     },
   ],
   following: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      // ref:"User"
+      ref: 'User',
     },
   ],
   posts: [{ type: mongoose.Types.ObjectId, required: true, ref: 'Post' }],
