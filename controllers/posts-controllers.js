@@ -27,7 +27,7 @@ const getAllPosts = async (req, res, next) => {
       new HttpError('Could not find Posts for the provided user id.', 404)
     )
   }
-  res.json({
+  res.status(200).json({
     posts: posts.map((post) => post.toObject({ getters: true })),
   })
 }
@@ -52,13 +52,13 @@ const getPostsByUserId = async (req, res, next) => {
   }
   // console.log(posts)
   // if (!Posts || Posts.length === 0) {
-  if (posts.length === 0) {
-    res.json({ posts: [], message: 'no posts found' })
-    // return next(
-    //   new HttpError('Could not find Posts for the provided user id.', 404)
-    // )
-  }
-  res.json({
+  // if (posts.length === 0) {
+  //   // res.json({ posts: [], message: 'no posts found' })
+  //   return next(
+  //     new HttpError('Could not find Posts for the provided user id.', 404)
+  //   )
+  // }
+  res.status(200).json({
     posts: posts.map((post) => post.toObject({ getters: true })),
   })
 }

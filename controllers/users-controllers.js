@@ -25,9 +25,15 @@ const getUsers = async (req, res, next) => {
 }
 
 const getNewUsers = async (req, res, next) => {
+  const userId = req.userData.userId
+
   let users
   try {
-    users = await User.find({}, '-password').limit(5)
+    users = await User.find({}, '-password')
+      .where('_id')
+      .ne(userId)
+      .sort({ _id: -1 })
+      .limit(5)
   } catch (err) {
     const error = new HttpError(
       'Fetching users failed, please try again later.',
