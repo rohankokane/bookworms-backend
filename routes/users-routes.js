@@ -17,13 +17,14 @@ router.post(
   usersController.signup
 )
 router.post('/login', usersController.login)
+router.get('/bootstrap/:id', usersController.bootstrapData)
 
 router.use(checkAuth)
 
 router.get('/', usersController.getUsers)
 // router.get('/bootstrap', usersController.bootstrapData)
 router.get('/:id', usersController.getUserById)
-router.get('/new/suggestion', usersController.getNewUsers)
+router.get('/new/suggestion', usersController.getSuggestionList)
 router.patch(
   '/:id',
   [

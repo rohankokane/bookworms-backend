@@ -24,8 +24,8 @@ const getUsers = async (req, res, next) => {
     .json({ users: users.map((user) => user.toObject({ getters: true })) })
 }
 
-const getNewUsers = async (req, res, next) => {
-  const userId = req.userData.userId
+const getNewUsers = async (userId) => {
+  // const userId = req.userData.userId
 
   let users
   try {
@@ -39,11 +39,19 @@ const getNewUsers = async (req, res, next) => {
       'Fetching users failed, please try again later.',
       500
     )
-    return next(error)
+    throw error
   }
-  res
-    .status(200)
-    .json({ users: users.map((user) => user.toObject({ getters: true })) })
+  return users.map((user) => user.toObject({ getters: true }))
+}
+const getSuggestionList = async (req, res, next) => {
+  const userId = req.userData.userId
+  let usersList
+  try {
+    usersList = await getNewUsers(userId)
+  } catch (e) {
+    next(e)
+  }
+  res.status(200).json({ users: usersList })
 }
 
 const signup = async (req, res, next) => {
@@ -120,6 +128,8 @@ const signup = async (req, res, next) => {
   }
 
   let userData = createdUser.toObject({ getters: true })
+  userData.suggestions = await getNewUsers(userData.id)
+
   delete userData.password
   res.status(201).json({
     userId: createdUser.id,
@@ -145,7 +155,6 @@ const login = async (req, res, next) => {
     )
     return next(error)
   }
-
   if (!existingUser) {
     const error = new HttpError(
       'Invalid credentials, could not log you in.',
@@ -164,7 +173,6 @@ const login = async (req, res, next) => {
     )
     return next(error)
   }
-
   if (!isValidPassword) {
     const error = new HttpError(
       'Invalid credentials, could not log you in.',
@@ -190,15 +198,31 @@ const login = async (req, res, next) => {
 
   delete existingUser.password
   existingUser = existingUser.toObject({ getters: true })
+
+  existingUser.suggestions = await getNewUsers(existingUser.id)
+
   res.status(201).json({
     userId: existingUser.id,
     token: token,
     ...existingUser,
   })
 }
-
-const getUserById = async (req, res, next) => {
+const bootstrapData = async (req, res, next) => {
+  //user id
   const _id = req.params.id
+  let userData, suggestions, data
+  try {
+    data = await Promise.allSettled([fetchUserById(_id), getNewUsers(_id)])
+  } catch (e) {
+    next(e)
+  }
+  userData = data[0].value
+  suggestions = data[1].value
+  console.log(data)
+  userData.suggestions = suggestions
+  res.status(200).json({ ...userData, userId: userData.id })
+}
+const fetchUserById = async (_id) => {
   let user
   try {
     user = await User.findById(_id, '-password')
@@ -206,16 +230,28 @@ const getUserById = async (req, res, next) => {
       .populate('following', 'username fullname image')
     if (!user) {
       const error = new HttpError('No user found', 404)
-      return next(error)
+      throw error
     }
   } catch (e) {
     const error = new HttpError(
       'Something went wrong, could not get the user',
       500
     )
-    return next(error)
+    throw error
   }
   const userData = user.toObject({ getters: true })
+  return userData
+}
+
+const getUserById = async (req, res, next) => {
+  const _id = req.params.id
+  let userData
+  try {
+    userData = await fetchUserById(_id)
+  } catch (e) {
+    return next(e)
+  }
+
   res.status(200).json({ ...userData, userId: userData.id })
 }
 
@@ -318,10 +354,11 @@ const unfollowProfile = async (req, res, next) => {
 }
 
 exports.getUsers = getUsers
-exports.getNewUsers = getNewUsers
+exports.getSuggestionList = getSuggestionList
 exports.signup = signup
 exports.login = login
 exports.getUserById = getUserById
+exports.bootstrapData = bootstrapData
 exports.updateUser = updateUser
 exports.followProfile = followProfile
 exports.unfollowProfile = unfollowProfile
