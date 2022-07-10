@@ -14,7 +14,8 @@ const { Schema } = mongoose
 // }],
 const postSchema = new Schema(
   {
-    caption: { type: String },
+    caption: { type: String, required: true },
+    viewCount: { type: Number, default: 0 },
     likes: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -25,6 +26,12 @@ const postSchema = new Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
+      },
+    ],
+    comments: [
+      {
+        type: mongoose.Types.ObjectId,
+        ref: 'Comment',
       },
     ],
     creator: { type: mongoose.Types.ObjectId, required: true, ref: 'User' },

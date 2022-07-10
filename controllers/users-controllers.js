@@ -218,7 +218,7 @@ const bootstrapData = async (req, res, next) => {
   }
   userData = data[0].value
   suggestions = data[1].value
-  console.log(data)
+  // console.log(data)
   userData.suggestions = suggestions
   res.status(200).json({ ...userData, userId: userData.id })
 }

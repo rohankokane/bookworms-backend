@@ -37,15 +37,21 @@ app.use((error, req, res, next) => {
   res.status(error.code || 500)
   res.json({ message: error.message || 'An unknown error occurred!' })
 })
-// mongoose.connect(
-//   `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.wtuap.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`
-// )
+// mongoose
+//   .connect(
+//     'mongodb+srv://cluster0.wtuap.mongodb.net/bookworms?retryWrites=true&w=majority',
+//     {
+//       user: process.env.DB_USER,
+//       pass: process.env.DB_PASSWORD,
+//       useNewUrlParser: true,
+//       useUnifiedTopology: true,
+//     }
+//   )
 mongoose
   .connect(
-    'mongodb+srv://cluster0.wtuap.mongodb.net/bookworms?retryWrites=true&w=majority',
+    `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.wtuap.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`,
+
     {
-      user: process.env.DB_USER,
-      pass: process.env.DB_PASSWORD,
       useNewUrlParser: true,
       useUnifiedTopology: true,
     }
