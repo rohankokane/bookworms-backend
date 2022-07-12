@@ -7,21 +7,31 @@ const HttpError = require('../models/http-error')
 const User = require('../models/user')
 
 const getUsers = async (req, res, next) => {
+  const userId = req.userData.userId
+
+  const keyword = req.query.search
+  let regex = new RegExp(keyword, 'i')
+
   let users
   try {
-    users = await User.find({}, '-password')
-      .populate('followers', 'username fullname')
-      .populate('following', 'username fullname')
+    users = await User.find({
+      $or: [{ username: regex }, { fullname: regex }],
+    })
+      .where('_id')
+      .ne(userId)
   } catch (err) {
-    const error = new HttpError(
-      'Fetching users failed, please try again later.',
-      500
-    )
+    console.log(err)
+    const error = new HttpError('Fetching users failed, please try again.', 500)
     return next(error)
   }
-  res
-    .status(200)
-    .json({ users: users.map((user) => user.toObject({ getters: true })) })
+  if (users.length === 0) {
+    const error = new HttpError('No user found', 404)
+    return next(error)
+  } else {
+    res
+      .status(200)
+      .json({ users: users.map((user) => user.toObject({ getters: true })) })
+  }
 }
 
 const getNewUsers = async (userId) => {
