@@ -17,10 +17,10 @@ router.post(
   usersController.signup
 )
 router.post('/login', usersController.login)
-router.get('/bootstrap/:id', usersController.bootstrapData)
 
 router.use(checkAuth)
 
+router.get('/bootstrap/:id', usersController.bootstrapData)
 router.get('/', usersController.getUsers)
 // router.get('/bootstrap', usersController.bootstrapData)
 router.get('/:id', usersController.getUserById)
