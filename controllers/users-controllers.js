@@ -144,6 +144,7 @@ const signup = async (req, res, next) => {
     userId: createdUser.id,
     email: createdUser.email,
     token: token,
+    expirationDate: 2592000,
     ...userData,
   })
 }
@@ -213,6 +214,7 @@ const login = async (req, res, next) => {
   res.status(201).json({
     userId: existingUser.id,
     token: token,
+    expirationDate: 2592000,
     ...existingUser,
   })
 }
