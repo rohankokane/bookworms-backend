@@ -220,7 +220,9 @@ const login = async (req, res, next) => {
 }
 const bootstrapData = async (req, res, next) => {
   //user id
-  const _id = req.params.id
+  const _id = req.userData.userId
+  // const _id = req.params.id
+
   let userData, suggestions, data
   try {
     data = await Promise.allSettled([fetchUserById(_id), getNewUsers(_id)])
